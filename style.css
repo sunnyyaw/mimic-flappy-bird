@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+  border: 1px solid orange;
+}
+body {
+  padding: 0;
+  margin: 0;
+}
+#canvas {
+  display: block;
+  margin: 0 auto;
+  background: url('/assets/background.png');
+  background-size: contain;
+}
+.mask {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 600px;
+  background-color: rgba(0,0,0,0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mask-text {
+  color: red;
+  font-size: 1.3rem;
+  user-select: none;
+}
