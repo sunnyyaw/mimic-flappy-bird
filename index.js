@@ -2,7 +2,6 @@ const canvas = document.getElementById('canvas');
 const width = canvas.width;
 const height = canvas.height;
 const mask = document.getElementById('mask');
-const maskText = document.getElementById('mask-span');
 const birdImage = new Image();
 const bottomPillarImage = new Image();
 const topPillarImage = new Image();
@@ -13,7 +12,37 @@ const moveSpeed = 1;
 const pillarNum = 3;
 const holeHeight = height * 0.25;
 const birdSize = { width: width * 0.06, height: height * 0.04 };
-let paused;
+
+const AT_MENU = 0;
+const AT_READY = 1;
+const AT_PLAYING = 2;
+const AT_PAUSE = 3;
+const AT_RESULT = 4;
+
+//结算画面布局
+const overWidth = width * 0.4;
+const overHeight = overWidth / 192 * 42;
+const overX = width / 2 - overWidth / 2;
+const overY = height * 0.3 - overHeight / 2;
+const menuBtnWidth = width * 0.2;
+const menuBtnHeight = menuBtnWidth / 80 * 28;
+const menuBtnX = width / 2 - menuBtnWidth / 2;
+const okBtnY = height * 3 / 5 - menuBtnHeight / 2;
+const shareBtnY = okBtnY + menuBtnHeight + 10;
+const menuBtnY = okBtnY + 2 * (menuBtnHeight + 10);
+
+//首页布局
+const titleWidth = width * 0.4;
+const titleHeight = titleWidth / 179 * 48;
+const titleX = width / 2 - titleWidth / 2;
+const titleY = height * 0.3 - titleHeight / 2;
+const btnWidth = width * 0.2;
+const btnHeight = btnWidth / 104 * 58;
+const btnStartX = width / 3 - btnWidth / 2;
+const btnRankX = width * 2/ 3 - btnWidth / 2;
+const btnY = height * 2/ 3 - btnHeight / 2;
+
+let state;
 let birdPosition;
 let birdVelocity;
 let birdAcceleration;
@@ -36,30 +65,45 @@ bottomPillarImage.onload = () => bottomPillarComplete = true;
 topPillarImage.onload = () => topPillarComplete = true;
 spriteImage.onload = () => {
   init();
-  draw();
+  drawFrame();
   drawMainMenu();
 };
 
 
 window.addEventListener('keydown', event => {
-  if (event.code === 'Space' && paused) {
-    window.cancelAnimationFrame(requestId);
-    mask.style.visibility = 'hidden';
+  if (event.code === 'Space' && state === AT_MENU) {
+    drawReady();
+  } else if (event.code === 'Space' && (state === AT_READY || state === AT_PAUSE)) {
     start();
-  } else if (event.code === 'Space' ) {
+  } else if (event.code === 'Space' && state === AT_PLAYING) {
     birdVelocity.y = -5;
-  } else if(event.code === 'Escape' && !paused) {
+  } else if(event.code === 'Escape' && state === AT_PLAYING) {
     pause();
   } 
 });
-window.addEventListener('click', handleClick);
+canvas.addEventListener('click', handleClick);
 
 function randomHeight() {
   return (height - holeHeight) * Math.random();
 };
-
+function drawReady() {
+  drawFrame();
+  const readyWidth = width * 0.4;
+  const readyHeight = readyWidth / 184 * 50;
+  const readyX = width / 2 - readyWidth / 2;
+  const readyY = height * 0.3 - readyHeight / 2;
+  const captionWidth = width * 0.3;
+  const captionHeight = captionWidth / 114 * 98;
+  const captionX = width / 2 - captionWidth / 2;
+  const captionY = height * 0.5 - captionHeight / 2;
+  ctx.drawImage(spriteImage,584,182,114,98,
+    captionX,captionY,captionWidth,captionHeight);
+  ctx.drawImage(spriteImage,590,118,184,50,
+    readyX,readyY,readyWidth,readyHeight);
+  state = AT_READY;
+};
 const init = () => {
-  paused = true;
+  state = AT_MENU;
   score = 0;
   birdPosition = { x: width * 0.2, y: height * 0.3 };
   birdVelocity = { x: 0, y: 0 };
@@ -68,7 +112,7 @@ const init = () => {
     pillar = {};
     pillar.x = width + width * index / pillarNum;
     pillar.width = width * 0.08;
-    pillar = refreshPillarHeight(pillar);
+    refreshPillarHeight(pillar);
     return pillar;
   });
   nextPillarIndex = 0;
@@ -76,11 +120,8 @@ const init = () => {
 
 const refreshPillarHeight = (pillar) => {
   const topHeight = randomHeight();
-  return {
-    ...pillar,
-    topHeight: topHeight,
-    bottomHeight: height - topHeight - holeHeight
-  };
+  pillar.topHeight = topHeight;
+  pillar.bottomHeight = height - topHeight - holeHeight;
 };
 
 const testCollision = () => {
@@ -94,27 +135,42 @@ const testCollision = () => {
       birdPosition.x < pillar.x + pillar.width &&
       birdPosition.y + birdSize.height > height - pillar.bottomHeight ||
       birdPosition.y > height) {
-      printResult();
-      init();
-      draw();
+      drawResult();
       return;
     }
   });
 };
-const printResult = () => {
+const drawResult = () => {
   window.cancelAnimationFrame(requestId);
-  maskText.textContent = `Your final score is ${score}, Press space to restart`;
-  mask.style.visibility = 'visible';
-  paused = true;
+  ctx.drawImage(spriteImage,790,118,192,42,
+    overX,overY,overWidth,overHeight);
+  ctx.drawImage(spriteImage,924,52,80,28,
+    menuBtnX,menuBtnY,menuBtnWidth,menuBtnHeight);
+  ctx.drawImage(spriteImage,584,284,80,28,
+    menuBtnX,shareBtnY,menuBtnWidth,menuBtnHeight);
+  ctx.drawImage(spriteImage,924,84,80,28,
+    menuBtnX,okBtnY,menuBtnWidth,menuBtnHeight);
+  ctx.fillStyle = '#FF0000';
+  ctx.textAlign = 'center';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Your final score is ${score}`,
+  width / 2 ,height / 2);
+  state = AT_RESULT;
 };
 const pause = () => {
   window.cancelAnimationFrame(requestId);
-  maskText.textContent = `Press space to start`;
+  ctx.fillStyle = '#FF0000';
+  ctx.textAlign = 'center';
+  ctx.font = '18px Arial';
+  ctx.fillText(`Press space to start`,
+  width / 2 ,height / 2);
   mask.style.visibility = 'visible';
-  paused = true;
+  state = AT_PAUSE;
 };
 const start = () => {
-  paused = false;
+  window.cancelAnimationFrame(requestId);
+  mask.style.visibility = 'hidden';
+  state = AT_PLAYING;
   refresh();
 };
 const update = () => {
@@ -144,11 +200,11 @@ const updatePillars = () => {
       pillar.x = pillar.x - moveSpeed;
     } else {
       pillar.x = width;
-      pillar = refreshPillarHeight(pillar);
+      refreshPillarHeight(pillar);
     }
   });
 }
-const draw = () => {
+const drawFrame = () => {
   ctx.clearRect(0, 0, width, height);
   
   if (birdComplete) {
@@ -170,34 +226,70 @@ const draw = () => {
     }
   });
 
-  ctx.fillStyle = "#FF0000";
-  ctx.font = "25px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(`Your score: ${score}`, width / 2, height * 0.1);
 };
-function handleClick() {
-  birdVelocity.y = -5;
+function drawScore() {
+  const digitWidth = 24;
+  const digitHeight = 36;
+  const digitArr = score.toString().split('');
+  const textWidth = digitWidth * digitArr.length;
+  const textX = width / 2 - textWidth / 2;
+  const textY = height / 6;
+  const positionMap = {
+    '0': {x: 992,y: 120, width: 24, height: 36},
+    '1': {x: 272,y: 910, width: 16, height: 36},
+    '2': {x: 584,y: 320, width: 24, height: 36},
+    '3': {x: 612,y: 320, width: 24, height: 36},
+    '4': {x: 640,y: 320, width: 24, height: 36},
+    '5': {x: 668,y: 320, width: 24, height: 36},
+    '6': {x: 584,y: 368, width: 24, height: 36},
+    '7': {x: 612,y: 368, width: 24, height: 36},
+    '8': {x: 640,y: 368, width: 24, height: 36},
+    '9': {x: 668,y: 368, width: 24, height: 36},
+  };
+  digitArr.forEach((digit,index) => {
+    const digitImagePosition = positionMap[digit];
+    const digitX = textX + index * digitWidth;
+    const digitY = textY;
+    ctx.drawImage(spriteImage,digitImagePosition.x,digitImagePosition.y,
+      digitImagePosition.width,digitImagePosition.height,
+      digitX,digitY,digitWidth,digitHeight);
+  });
+};
+function handleClick(event) {
+  if (state === AT_PLAYING) {
+    birdVelocity.y = -5;
+  } else if (state === AT_READY) {
+    birdVelocity.y = -5;
+    start();
+  } else if (state === AT_RESULT 
+    && event.offsetX < menuBtnX + menuBtnWidth && event.offsetX > menuBtnX
+    && event.offsetY < menuBtnY + menuBtnHeight && event.offsetY > menuBtnY) {
+    init();
+    drawFrame();
+    drawMainMenu();
+  } else if (state === AT_MENU 
+    && event.offsetX < btnStartX + btnWidth && event.offsetX > btnStartX
+    && event.offsetY < btnY + btnHeight && event.offsetY > btnY) {
+    drawReady();
+  } else if (state === AT_RESULT 
+    && event.offsetX < menuBtnX + menuBtnWidth && event.offsetX > menuBtnX
+    && event.offsetY < okBtnY + menuBtnHeight && event.offsetY > okBtnY) {
+    init();
+    drawReady();
+  }
 };
 const refresh = () => {
   update();
-  draw();
+  drawFrame();
+  drawScore();
   testCollision();
-  if (!paused) {
+  if (state === AT_PLAYING) {
     requestId = requestAnimationFrame(refresh);
   } else {
     window.cancelAnimationFrame(requestId);
   }
 };
 const drawMainMenu = () => {
-  const titleWidth = width * 0.4;
-  const titleHeight = titleWidth / 179 * 48;
-  const titleX = width / 2 - titleWidth / 2;
-  const titleY = height * 0.3 - titleHeight / 2;
-  const btnWidth = width * 0.2;
-  const btnHeight = btnWidth / 104 * 58;
-  const btnStartX = width / 3 - btnWidth / 2;
-  const btnRankX = width * 2/ 3 - btnWidth / 2;
-  const btnY = height * 2/ 3 - btnHeight / 2;
   ctx.drawImage(spriteImage,702,182,179,48,
     titleX,titleY,titleWidth,titleHeight);
   ctx.drawImage(spriteImage,708,236,104,58,

@@ -14,20 +14,11 @@ body {
 }
 .mask {
   position: absolute;
+  visibility: hidden;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 500px;
   height: 600px;
   background-color: rgba(0,0,0,0.15);
-}
-.mask-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  color: red;
-  font-size: 1.3rem;
-  text-align: center;
-  user-select: none;
 }
