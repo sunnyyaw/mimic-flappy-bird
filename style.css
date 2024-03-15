@@ -9,8 +9,7 @@ body {
 #canvas {
   display: block;
   margin: 0 auto;
-  background: url('/assets/background.png');
-  background-size: contain;
+  background-size: cover;
 }
 .mask {
   position: absolute;
