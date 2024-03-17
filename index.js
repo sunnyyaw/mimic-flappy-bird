@@ -281,7 +281,7 @@ const drawBackground = () => {
 const clearScreen = () => {
   ctx.clearRect(0, 0, width, height);
 };
-function drawScore(scoreParam = score,textY = height / 6,digitHeight = 36) {
+function drawScore(scoreParam = score,textY = height / 6,digitHeight = 36,drawIndex = null) {
   const positionMap = {
     '0': {x: 992,y: 120, width: 24, height: 36},
     '1': {x: 272,y: 910, width: 16, height: 36},
@@ -294,10 +294,29 @@ function drawScore(scoreParam = score,textY = height / 6,digitHeight = 36) {
     '8': {x: 640,y: 368, width: 24, height: 36},
     '9': {x: 668,y: 368, width: 24, height: 36},
   };
+  const numMap = [
+    {x: 276,y: 646, width: 12, height: 14},
+    {x: 276,y: 664, width: 12, height: 14},
+    {x: 276,y: 698, width: 12, height: 14},
+    {x: 276,y: 716, width: 12, height: 14},
+    {x: 276,y: 750, width: 12, height: 14},
+    {x: 276,y: 768, width: 12, height: 14},
+    {x: 276,y: 802, width: 12, height: 14},
+    {x: 276,y: 820, width: 12, height: 14},
+    {x: 276,y: 854, width: 12, height: 14},
+    {x: 276,y: 872, width: 12, height: 14},
+  ];
   const digitArr = scoreParam.toString().split('');
   const textWidth = digitArr.reduce((acc,el) => acc + positionMap[el].width,0);
   const textX = width / 2 - textWidth / 2;
   let digitX = textX;
+  if (numMap[drawIndex]) {
+    const numWidth = 12;
+    const numHeight = 14;
+    ctx.drawImage(spriteImage,numMap[drawIndex].x,numMap[drawIndex].y
+      ,numMap[drawIndex].width,numMap[drawIndex].height,
+      width / 6, textY + (digitHeight - numHeight) / 2,numWidth,numHeight);
+  }
   digitArr.forEach(digit => {
     const digitImagePosition = positionMap[digit];
     const digitY = textY;
@@ -317,7 +336,7 @@ const drawRank = () => {
   ctx.drawImage(spriteImage,924,52,80,28,
     menuBtnX,menuBtnY,menuBtnWidth,menuBtnHeight);
   records.forEach((record,index) => {
-    drawScore(record,height / 8 + index * (digitHeight + gap),digitHeight);
+    drawScore(record,height / 8 + index * (digitHeight + gap),digitHeight,drawIndex = index);
   });
   state = AT_RANK;
 }
